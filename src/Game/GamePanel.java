@@ -29,7 +29,7 @@ public class GamePanel extends JPanel implements Runnable {
     public final int screenHeight = titleSize * maxScreenRow;
 
     private enum StatusGame {
-        START, PLAYING, PAUSE, OVER
+        START, PLAYING, PAUSE, OVER, TRANSITION,
     }
 
     private StatusGame statusGame = StatusGame.START;
@@ -54,6 +54,9 @@ public class GamePanel extends JPanel implements Runnable {
     private int scores = 0;
 
     private GButton[] _buttons;
+
+    private int delayTransition = 500;
+
 
     public void startGameThread() {
         gameThread = new Thread(this);
@@ -115,6 +118,14 @@ public class GamePanel extends JPanel implements Runnable {
         setFocusable(true);
     }
 
+    public void restartGame() {
+        player = new Player(this, keyInput);
+        player.setLocation((screenWidth - player.getWidth()) / 2, (screenHeight - player.getHeight()) / 2);
+        resetZombies();
+        scores = 0;
+    }
+
+
     public static void main(String[] args) {
         GamePanel game = new GamePanel();
         game.setMap("map3.txt");
@@ -133,6 +144,8 @@ public class GamePanel extends JPanel implements Runnable {
 
             numBackground++;
             scores++;
+
+            statusGame = StatusGame.TRANSITION;
 
             if (numBackground >= 4) numBackground = 0;
             //  Declare Entities
@@ -187,13 +200,27 @@ public class GamePanel extends JPanel implements Runnable {
     public void update() {
         if (statusGame == StatusGame.START) {
             _buttons[ButtonConstant.PLAY.ordinal()].update();
-            if (_buttons[ButtonConstant.PLAY.ordinal()].isPressed()) statusGame = StatusGame.PLAYING;
+            if (_buttons[ButtonConstant.PLAY.ordinal()].isPressed()) {
+                statusGame = StatusGame.PLAYING;
+                _buttons[ButtonConstant.PLAY.ordinal()].setPressed(false);
+            }
             return;
         }
         if (statusGame == StatusGame.START && keyInput.isPressed()) {
             statusGame = StatusGame.PLAYING;
         } else if (statusGame == StatusGame.PLAYING) {
             player.update();
+
+            if (player.isDied()) {
+                delayTransition -= 10;
+//                System.out.println(delayTransition);
+                if (delayTransition <= 0) {
+                    delayTransition = 500;
+                    statusGame = StatusGame.OVER;
+                }
+                return;
+            }
+
             for (int i = 0; i < 5; i++) {
                 zombies[i].update();
             }
@@ -210,6 +237,22 @@ public class GamePanel extends JPanel implements Runnable {
             if (keyInput.isESC() || _buttons[ButtonConstant.UNPAUSE.ordinal()].isPressed()) {
                 statusGame = StatusGame.PLAYING;
                 _buttons[ButtonConstant.UNPAUSE.ordinal()].setPressed(false);
+            }
+        } else if (statusGame == StatusGame.TRANSITION) {
+            delayTransition--;
+            if (delayTransition <= 0
+                    || keyInput.isESC()) {
+                delayTransition = 500;
+                statusGame = StatusGame.PLAYING;
+                return;
+            }
+        } else if (statusGame == StatusGame.OVER) {
+            _buttons[ButtonConstant.PLAY.ordinal()].update();
+
+            if (_buttons[ButtonConstant.PLAY.ordinal()].isPressed()) {
+                statusGame = StatusGame.TRANSITION;
+                _buttons[ButtonConstant.PLAY.ordinal()].setPressed(false);
+                restartGame();
             }
         }
     }
@@ -242,13 +285,19 @@ public class GamePanel extends JPanel implements Runnable {
             // END OF [For development]
             paintInformation(g2d);
 
-            // Draw player
-            player.draw(g2d);
+
             for (int i = 0; i < 5; i++)
                 zombies[i].draw(g2d);
 
+            // Draw player
+            player.draw(g2d);
+
         } else if (statusGame == StatusGame.PAUSE) {
             paintPauseScreen(g2d);
+        } else if (statusGame == StatusGame.TRANSITION) {
+            paintMapTransition(g2d);
+        } else if (statusGame == StatusGame.OVER) {
+            paintGameOver(g2d);
         }
 
 
@@ -289,19 +338,25 @@ public class GamePanel extends JPanel implements Runnable {
         g2d.setColor(new Color(0, 0, 0, 100));
         g2d.fillRect(0, 0, screenWidth, screenHeight);
 
+        _buttons[ButtonConstant.PLAY.ordinal()].setContent("PLAY");
+        _buttons[ButtonConstant.PLAY.ordinal()].setStringLocation(70, 40);
         _buttons[ButtonConstant.PLAY.ordinal()].draw(g2d);
     }
 
     public void paintInformation(Graphics2D g2d) {
 
         // Scores
-        g2d.setColor(new Color(0, 0, 0, 100));
-        g2d.fillRoundRect(screenWidth - 150, 10, 120, 50, 30, 30);
+        g2d.setColor(new Color(0, 0, 0, 150));
+        g2d.fillRoundRect(screenWidth - 280, 10, 250, 50, 30, 30);
 
         g2d.setFont(new Font("Arial", Font.PLAIN, 20));
         g2d.setColor(Color.WHITE);
         String str = scores + " Star(s)";
         g2d.drawString(str, screenWidth - 130, 40);
+
+        g2d.setFont(new Font("Arial", Font.BOLD, 20));
+        str = player.getHP() + " HP";
+        g2d.drawString(str, screenWidth - 250, 40);
 
         // PAUSE button
         _buttons[ButtonConstant.PAUSE.ordinal()].draw(g2d);
@@ -311,6 +366,29 @@ public class GamePanel extends JPanel implements Runnable {
         g2d.setColor(new Color(0, 0, 0, 100));
         g2d.fillRect(0, 0, screenWidth, screenHeight);
         _buttons[ButtonConstant.UNPAUSE.ordinal()].draw(g2d);
+    }
+
+    public void paintMapTransition(Graphics2D g2d) {
+
+        g2d.setColor(new Color(0, 0, 0, 100));
+        g2d.fillRect(0, 0, screenWidth, screenHeight);
+
+        g2d.setFont(new Font("Arial", Font.BOLD, 30));
+        g2d.setColor(Color.RED);
+        g2d.drawString("Continue after " + (delayTransition / 50) + "s", (screenWidth - 200) / 2, (screenHeight - 30) / 2);
+    }
+
+    public void paintGameOver(Graphics2D g2d) {
+        g2d.setColor(new Color(0, 0, 0, 100));
+        g2d.fillRect(0, 0, screenWidth, screenHeight);
+
+        g2d.setFont(new Font("Arial", Font.BOLD, 30));
+        g2d.setColor(Color.RED);
+        g2d.drawString("Game Over", (screenWidth - 160) / 2, (screenHeight - 30) / 2 - 40);
+        g2d.drawString("YOUR SCORES: " + scores, (screenWidth - 250) / 2, (screenHeight - 30) / 2 + 100);
+        _buttons[ButtonConstant.PLAY.ordinal()].setContent("AGAIN");
+        _buttons[ButtonConstant.PLAY.ordinal()].setStringLocation(55, 40);
+        _buttons[ButtonConstant.PLAY.ordinal()].draw(g2d);
     }
 
     public boolean setMap(String mapName) {

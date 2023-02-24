@@ -18,7 +18,7 @@ public class Zombie extends Entity {
     private Direction direction = Direction.RIGHT;
 
     private boolean isMove = true, isAttack = false, isDied = false;
-    private int _animatedCounter = 0;
+    private int _animatedCounter = 0, _delayAttack = 30;
 
     private int HP = 30;
 
@@ -131,12 +131,29 @@ public class Zombie extends Entity {
 
         if (Math.abs(_x + _width / 2 - gamePanel.player._x - gamePanel.player._width / 2) < 30) {
             isAttack = true;
-        } else
+        } else {
             isAttack = false;
+            _delayAttack = 20;
+        }
+
+        if (isAttack) {
+
+            _delayAttack--;
+
+            if (_delayAttack <= 0 && Math.abs(_x + _width / 2 - gamePanel.player._x - gamePanel.player._width / 2) < 30) {
+                gamePanel.player.hurt();
+
+                _delayAttack = 20;
+            }
+        }
     }
 
     @Override
     public void draw(Graphics2D g2d) {
+        // Shadow:
+        g2d.setColor(new Color(0, 0, 0, 100));
+        g2d.fillOval(_x + 40, _y + _height - 20, _width - 80, 20);
+
         if (isDied) {
             if (_animatedCounter >= _dyingImage.length) {
                 isDied = false;

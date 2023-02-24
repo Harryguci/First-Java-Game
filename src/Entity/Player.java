@@ -12,7 +12,8 @@ public class Player extends Entity {
     private BufferedImage[] _walkingImages = new BufferedImage[18];
     private BufferedImage[] _standingImage = new BufferedImage[12];
     private BufferedImage[] _attackingImage = new BufferedImage[12];
-    private boolean isMove = false, isAttack = false;
+    private BufferedImage[] _dyingImage = new BufferedImage[15];
+    private boolean isMove = false, isAttack = false, isDied = false;
     private int _imageNum = 0, _countDelay = 0;
     private int HP = 300;
 
@@ -36,7 +37,7 @@ public class Player extends Entity {
         super(gamePanel, keyInput);
         setImage();
 
-        System.out.println(_width + " " + _height);
+        // System.out.println(_width + " " + _height);
         setSize(new Dimension((int) (100 * 1.47), 100));
     }
 
@@ -87,14 +88,49 @@ public class Player extends Entity {
             _attackingImage[10] = ImageReader.Read("Player1/Attacking/Minotaur_02_Attacking_010.png");
             _attackingImage[11] = ImageReader.Read("Player1/Attacking/Minotaur_02_Attacking_011.png");
 
+            _dyingImage[0] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_000.png");
+            _dyingImage[1] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_001.png");
+            _dyingImage[2] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_002.png");
+            _dyingImage[3] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_003.png");
+            _dyingImage[4] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_004.png");
+            _dyingImage[5] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_005.png");
+            _dyingImage[6] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_006.png");
+            _dyingImage[7] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_007.png");
+            _dyingImage[8] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_008.png");
+            _dyingImage[9] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_009.png");
+            _dyingImage[10] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_010.png");
+            _dyingImage[11] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_011.png");
+            _dyingImage[12] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_012.png");
+            _dyingImage[13] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_013.png");
+            _dyingImage[14] = ImageReader.Read("Player1/Dying/Minotaur_02_Dying_014.png");
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+
+    // Setter & Getter
+    public int getHP() {
+        return this.HP;
+    }
+
+    public void setLocation(int x, int y) {
+        _x = x;
+        _y = y;
+    }
+
+    public boolean isDied() {
+        return isDied;
+    }
+
     @Override
     public void update() {
 
+        if (HP <= 0) {
+            isDied = true;
+            return;
+        }
         if (keyInput.isUp()) {
             move(_x, _y - _speed);
             isMove = true;
@@ -132,18 +168,33 @@ public class Player extends Entity {
         }
     }
 
+
     @Override
     public void draw(Graphics2D g2d) {
 
         if (_standingImage != null) {
+
+            // Shadow:
+            g2d.setColor(new Color(0, 0, 0, 100));
+            g2d.fillOval(_x + 40, _y + _height - 20, _width - 80, 20);
+
             if (direction == Direction.RIGHT) {
+                // Player was died
+                if (isDied) {
+                    // _dyingImage
+                    if (_countDelay >= _dyingImage.length) _countDelay = 0;
+                    g2d.drawImage(_dyingImage[(int) (_countDelay++ / 2)], _x, _y, _width, _height, this);
+
+                    return;
+                }
+
                 if (isAttack) {
                     if (_countDelay >= animationAttacking.length)
                         _countDelay = 0;
                     g2d.drawImage(_attackingImage[animationAttacking[_countDelay++]], _x, _y, _width, _height, this);
                 } else {
                     if (isMove) {
-                        if (_countDelay >= _walkingImages.length) _countDelay = 0;
+                        if (_countDelay >= _walkingImages.length) _countDelay = _dyingImage.length - 1;
                         g2d.drawImage(_walkingImages[_countDelay++], _x, _y, _width, _height, this);
                     } else {
                         if (_countDelay >= _standingImage.length) _countDelay = 0;
@@ -151,6 +202,15 @@ public class Player extends Entity {
                     }
                 }
             } else if (direction == Direction.LEFT) {
+                // Player was died
+                if (isDied) {
+                    // _dyingImage
+                    if (_countDelay >= _dyingImage.length) _countDelay = _dyingImage.length - 1;
+                    g2d.drawImage(_dyingImage[_countDelay++], _x + _width, _y, -_width, _height, this);
+
+                    return;
+                }
+
                 if (isAttack) {
                     if (_countDelay >= animationAttacking.length)
                         _countDelay = 0;
@@ -178,6 +238,15 @@ public class Player extends Entity {
             if (HP >= i * 10)
                 g2d.fillRect(_x + _width / 10 * i, _y, _width / 10 - 5, 5);
         }
+    }
+
+    public void hurt() {
+        HP -= 10;
+        if (HP < 0) {
+            HP = 0;
+            _countDelay = 0;
+        }
+
     }
 
     public boolean canMove(int x, int y) {
@@ -219,4 +288,5 @@ public class Player extends Entity {
             else if (_y >= gamePanel.screenHeight) _y = 0;
         }
     }
+
 }

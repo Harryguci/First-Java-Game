@@ -77,6 +77,15 @@ public class GButton extends JPanel implements MouseListener {
         }
     }
 
+    public void setContent(String str) {
+        content = str;
+    }
+
+    public void setStringLocation(int x, int y) {
+        _strX = x;
+        _strY = y;
+    }
+
     public boolean isPressed() {
         return isPressed;
     }
@@ -90,7 +99,7 @@ public class GButton extends JPanel implements MouseListener {
             delay--;
             if (delay <= 0) {
                 gamePanel.mouseInput.isClicked = false;
-                delay = 15;
+                delay = 10;
                 isPressed = true;
             }
         } else {
@@ -124,9 +133,11 @@ public class GButton extends JPanel implements MouseListener {
         _x = x;
         _y = y;
     }
+
     public void setPressed(boolean value) {
         isPressed = value;
     }
+
     public void setFont(Font font, int x, int y) {
         this._font = font;
         this._strX = x;
