@@ -14,3 +14,6 @@
     + util: handling component
 - First Game.iml
 - README.md
+
+
+<img src="./DescriptImage.png">
