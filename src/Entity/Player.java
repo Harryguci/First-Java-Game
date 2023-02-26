@@ -15,7 +15,7 @@ public class Player extends Entity {
     private BufferedImage[] _dyingImage = new BufferedImage[15];
     private boolean isMove = false, isAttack = false, isDied = false;
     private int _imageNum = 0, _countDelay = 0;
-    private int HP = 300;
+    private int HP = 500;
 
     Direction direction = Direction.RIGHT;
 
@@ -163,6 +163,8 @@ public class Player extends Entity {
 
                 if (dx < 30 && dy < 20) {
                     gamePanel.zombies[i].kill();
+                    // Once time can only attack a Zombie. So we will return below.
+                    return;
                 }
             }
         }
@@ -240,8 +242,8 @@ public class Player extends Entity {
         }
     }
 
-    public void hurt() {
-        HP -= 10;
+    public void hurt(int d) {
+        HP -= d;
         if (HP < 0) {
             HP = 0;
             _countDelay = 0;

@@ -3,9 +3,9 @@ package Game;
 import Entity.Player;
 import Entity.Zombie;
 import Entity.gui.GButton;
-import util.ImageReader;
 import util.RandomLocation;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.Color;
@@ -14,8 +14,6 @@ import java.io.File;  // Import the File class
 import java.io.FileNotFoundException;  // Import this class to handle errors
 import java.io.IOException;
 import java.util.Scanner;
-
-import static Game.ButtonConstant.PLAY;
 
 public class GamePanel extends JPanel implements Runnable {
 
@@ -34,18 +32,21 @@ public class GamePanel extends JPanel implements Runnable {
 
     private StatusGame statusGame = StatusGame.START;
     public boolean[][] walls;
-    private BufferedImage _backgroundImg;
+    private final BufferedImage[] _backgroundImg = new BufferedImage[5];
     public int numBackground = 0;
-    public String[] pathBackground = {"Background/game_background_1.png", "Background/game_background_2.png", "Background/game_background_3.png", "Background/game_background_4.png"};
+    public String[] pathBackground =
+            {"Background/game_background_1.png", "Background/game_background_2.png", "Background/game_background_3.png", "Background/game_background_4.png"};
     int bg1LocationX;
 
     Thread gameThread;
-    private KeyInput keyInput;
+    private final KeyInput keyInput;
     public MouseInput mouseInput;
 
 
     public Player player;
     public Zombie[] zombies = new Zombie[100];
+    public Zombie zombieBoss;
+    private int countZombie;
 
     public String[] mapName = {"map3.txt"};
 
@@ -53,7 +54,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     private int scores = 0;
 
-    private GButton[] _buttons;
+    private final GButton[] _buttons;
 
     private int delayTransition = 500;
 
@@ -70,41 +71,29 @@ public class GamePanel extends JPanel implements Runnable {
         setDoubleBuffered(true);
         keyInput = new KeyInput();
         mouseInput = new MouseInput();
-
         _buttons = new GButton[10];
 
-        _buttons[ButtonConstant.PLAY.ordinal()] = new GButton("PLAY", this);
-        _buttons[ButtonConstant.PAUSE.ordinal()] = new GButton("PAUSE", this);
-
-        _buttons[ButtonConstant.PAUSE.ordinal()].setSize(100, 50);
-        _buttons[ButtonConstant.PAUSE.ordinal()].setLocation(10, 10);
-        _buttons[ButtonConstant.PAUSE.ordinal()].setFont(new Font("Arial", Font.BOLD, 15), 25, 30);
-
-
-        // UNPAUSE
-        _buttons[ButtonConstant.UNPAUSE.ordinal()] = new GButton("Continue", this);
-        _buttons[ButtonConstant.UNPAUSE.ordinal()].setSize(100, 50);
-        _buttons[ButtonConstant.UNPAUSE.ordinal()].setLocation((screenWidth - _buttons[ButtonConstant.UNPAUSE.ordinal()].getWidth()) / 2,
-                (screenHeight - _buttons[ButtonConstant.UNPAUSE.ordinal()].getHeight()) / 2);
-        _buttons[ButtonConstant.UNPAUSE.ordinal()].setFont(new Font("Arial", Font.BOLD, 15), 15, 30);
+        initButtons(); // set value for each button.
 
         // [ END OF : Default Game Project Setting ]
 
         //  Declare Entities
-        try {
-            bg1LocationX = 0;
-            _backgroundImg = ImageReader.Read(pathBackground[numBackground]);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        getBackgroundImg();
+
         player = new Player(this, keyInput);
         player.setLocation((screenWidth - player.getWidth()) / 2, (screenHeight - player.getHeight()) / 2);
 
-        for (int i = 0; i <= 5; i++) {
-            zombies[i] = new Zombie(this, keyInput);
-        }
+        zombies[0] = new Zombie(this, keyInput, 0);
 
+        for (int i = 1; i <= 5; i++) {
+            zombies[i] = new Zombie(zombies[0]);
+        }
         resetZombies();
+
+        zombieBoss = new Zombie(this, keyInput, 1);
+        zombieBoss.setSize(new Dimension((int) (100 * 1.47) * 3, 300));
+        zombieBoss.setDame(20);
+        countZombie = 10;
 
         walls = new boolean[screenHeight][screenWidth];
         //  [END OF] : Declare Entities
@@ -118,6 +107,23 @@ public class GamePanel extends JPanel implements Runnable {
         setFocusable(true);
     }
 
+    public void initButtons() {
+
+        _buttons[ButtonConstant.PLAY.ordinal()] = new GButton("PLAY", this);
+        _buttons[ButtonConstant.PAUSE.ordinal()] = new GButton("PAUSE", this);
+
+        _buttons[ButtonConstant.PAUSE.ordinal()].setSize(100, 50);
+        _buttons[ButtonConstant.PAUSE.ordinal()].setLocation(10, 10);
+        _buttons[ButtonConstant.PAUSE.ordinal()].setFont(new Font("Arial", Font.BOLD, 15), 25, 30);
+
+        // UNPAUSE
+        _buttons[ButtonConstant.UNPAUSE.ordinal()] = new GButton("Continue", this);
+        _buttons[ButtonConstant.UNPAUSE.ordinal()].setSize(100, 50);
+        _buttons[ButtonConstant.UNPAUSE.ordinal()].setLocation((screenWidth - _buttons[ButtonConstant.UNPAUSE.ordinal()].getWidth()) / 2,
+                (screenHeight - _buttons[ButtonConstant.UNPAUSE.ordinal()].getHeight()) / 2);
+        _buttons[ButtonConstant.UNPAUSE.ordinal()].setFont(new Font("Arial", Font.BOLD, 15), 15, 30);
+    }
+
     public void restartGame() {
         player = new Player(this, keyInput);
         player.setLocation((screenWidth - player.getWidth()) / 2, (screenHeight - player.getHeight()) / 2);
@@ -125,6 +131,17 @@ public class GamePanel extends JPanel implements Runnable {
         scores = 0;
     }
 
+    public void getBackgroundImg() {
+        try {
+            bg1LocationX = 0;
+            _backgroundImg[0] = ImageIO.read(new File(System.getProperty("user.dir") + "/src/resources/" + pathBackground[0]));
+            _backgroundImg[1] = ImageIO.read(new File(System.getProperty("user.dir") + "/src/resources/" + pathBackground[1]));
+            _backgroundImg[2] = ImageIO.read(new File(System.getProperty("user.dir") + "/src/resources/" + pathBackground[2]));
+            _backgroundImg[3] = ImageIO.read(new File(System.getProperty("user.dir") + "/src/resources/" + pathBackground[3]));
+        } catch (IOException e) {
+            System.out.println("Can not read bg");
+        }
+    }
 
     public static void main(String[] args) {
         GamePanel game = new GamePanel();
@@ -140,24 +157,21 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void incScore() {
         scores++;
-        if (scores > 0 && scores % 10 == 9) {
+
+        if (countZombie == 0) {
 
             numBackground++;
             scores++;
 
+            countZombie = numBackground * 2;
+
             statusGame = StatusGame.TRANSITION;
 
             if (numBackground >= 4) numBackground = 0;
-            //  Declare Entities
-            try {
-                resetZombies();
-                bg1LocationX = 0;
-                _backgroundImg = ImageReader.Read(pathBackground[numBackground]);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            resetZombies();
         }
     }
+
 
     @Override
     public void run() {
@@ -183,18 +197,22 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void resetZombies() {
+
+        if (countZombie <= 0)
+            return;
+
         for (int i = 0; i <= 5; i++) {
+            if (countZombie <= 0)
+                return;
+
             int d = (i % 2 == 0) ? -100 : screenWidth + 50;
             zombies[i].setLocation(d, new RandomLocation(0, screenHeight).rand());
+            countZombie--;
         }
     }
 
     public void updateBackground(int index) {
-        try {
-            _backgroundImg = ImageReader.Read(pathBackground[index]);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        numBackground = index;
     }
 
     public void update() {
@@ -204,10 +222,6 @@ public class GamePanel extends JPanel implements Runnable {
                 statusGame = StatusGame.PLAYING;
                 _buttons[ButtonConstant.PLAY.ordinal()].setPressed(false);
             }
-            return;
-        }
-        if (statusGame == StatusGame.START && keyInput.isPressed()) {
-            statusGame = StatusGame.PLAYING;
         } else if (statusGame == StatusGame.PLAYING) {
             player.update();
 
@@ -221,8 +235,12 @@ public class GamePanel extends JPanel implements Runnable {
                 return;
             }
 
-            for (int i = 0; i < 5; i++) {
-                zombies[i].update();
+            if (numBackground == 3) {
+                zombieBoss.update();
+            } else {
+                for (int i = 0; i < 5; i++) {
+                    zombies[i].update();
+                }
             }
 
             _buttons[ButtonConstant.PAUSE.ordinal()].update();
@@ -244,7 +262,6 @@ public class GamePanel extends JPanel implements Runnable {
                     || keyInput.isESC()) {
                 delayTransition = 500;
                 statusGame = StatusGame.PLAYING;
-                return;
             }
         } else if (statusGame == StatusGame.OVER) {
             _buttons[ButtonConstant.PLAY.ordinal()].update();
@@ -261,37 +278,12 @@ public class GamePanel extends JPanel implements Runnable {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g.create();
 
-        Color color1 = new Color(100, 200, 100, 50);
-
-        g2d.drawImage(_backgroundImg, bg1LocationX, 0, screenWidth, screenHeight, this);
+        g2d.drawImage(_backgroundImg[numBackground], 0, 0, screenWidth, screenHeight, this);
 
         if (statusGame == StatusGame.START) {
             paintStartScreen(g2d);
         } else if (statusGame == StatusGame.PLAYING) {
-
-            for (int y = 0; y < maxScreenRow * titleSize; y += titleSize) {
-                for (int x = 0; x < maxScreenCol * titleSize; x += titleSize) {
-                    g2d.setColor(color1);
-                    g2d.fillRect(x, y, titleSize, titleSize);
-                }
-            }
-
-            // [For development]
-
-            // paintMap(g2d);
-
-            // paintGrid(g2d);
-
-            // END OF [For development]
-            paintInformation(g2d);
-
-
-            for (int i = 0; i < 5; i++)
-                zombies[i].draw(g2d);
-
-            // Draw player
-            player.draw(g2d);
-
+            paintPlayScreen(g2d);
         } else if (statusGame == StatusGame.PAUSE) {
             paintPauseScreen(g2d);
         } else if (statusGame == StatusGame.TRANSITION) {
@@ -330,19 +322,6 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
-    public void paintStartScreen(Graphics2D g2d) {
-        g2d.setColor(Color.BLACK);
-        g2d.fillRect(0, 0, screenWidth, screenHeight);
-
-        g2d.drawImage(_backgroundImg, 0, 0, screenWidth, screenHeight, this);
-        g2d.setColor(new Color(0, 0, 0, 100));
-        g2d.fillRect(0, 0, screenWidth, screenHeight);
-
-        _buttons[ButtonConstant.PLAY.ordinal()].setContent("PLAY");
-        _buttons[ButtonConstant.PLAY.ordinal()].setStringLocation(70, 40);
-        _buttons[ButtonConstant.PLAY.ordinal()].draw(g2d);
-    }
-
     public void paintInformation(Graphics2D g2d) {
 
         // Scores
@@ -360,6 +339,41 @@ public class GamePanel extends JPanel implements Runnable {
 
         // PAUSE button
         _buttons[ButtonConstant.PAUSE.ordinal()].draw(g2d);
+    }
+
+    public void paintStartScreen(Graphics2D g2d) {
+        g2d.setColor(Color.BLACK);
+        g2d.fillRect(0, 0, screenWidth, screenHeight);
+
+        g2d.drawImage(_backgroundImg[numBackground], 0, 0, screenWidth, screenHeight, this);
+        g2d.setColor(new Color(0, 0, 0, 100));
+        g2d.fillRect(0, 0, screenWidth, screenHeight);
+
+        _buttons[ButtonConstant.PLAY.ordinal()].setContent("PLAY");
+        _buttons[ButtonConstant.PLAY.ordinal()].setStringLocation(70, 40);
+        _buttons[ButtonConstant.PLAY.ordinal()].draw(g2d);
+    }
+
+    public void paintPlayScreen(Graphics2D g2d) {
+
+        // [For development]
+
+        // paintMap(g2d);
+
+        // paintGrid(g2d);
+
+        // END OF [For development]
+        paintInformation(g2d);
+
+
+        if (numBackground == 3) {
+            zombieBoss.draw(g2d);
+        } else {
+            for (int i = 0; i < 5; i++)
+                zombies[i].draw(g2d);
+        }
+        // Draw player
+        player.draw(g2d);
     }
 
     public void paintPauseScreen(Graphics2D g2d) {

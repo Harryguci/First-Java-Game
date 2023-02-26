@@ -15,7 +15,7 @@ public class Game extends JFrame {
         this.setResizable(false);
         this.setLocationRelativeTo(null);
         this.pack();
-        this.setLocation(100, 100);
+        this.setLocation(0, 500);
         this.setVisible(true);
     }
 
