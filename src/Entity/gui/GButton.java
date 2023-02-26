@@ -35,8 +35,8 @@ public class GButton extends JPanel implements MouseListener {
 
         _x = _y = 0;
 
-        _strX = 70;
-        _strY = 40;
+    _strX = 70;
+    _strY = 40;
 
         _font = new Font("Roboto", Font.BOLD, 30);
 

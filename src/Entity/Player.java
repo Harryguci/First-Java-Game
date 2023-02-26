@@ -9,17 +9,19 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 public class Player extends Entity {
-    private BufferedImage[] _walkingImages = new BufferedImage[18];
-    private BufferedImage[] _standingImage = new BufferedImage[12];
-    private BufferedImage[] _attackingImage = new BufferedImage[12];
-    private BufferedImage[] _dyingImage = new BufferedImage[15];
+    private final BufferedImage[] _walkingImages = new BufferedImage[18];
+    private final BufferedImage[] _standingImage = new BufferedImage[12];
+    private final BufferedImage[] _attackingImage = new BufferedImage[12];
+    private final BufferedImage[] _dyingImage = new BufferedImage[15];
     private boolean isMove = false, isAttack = false, isDied = false;
-    private int _imageNum = 0, _countDelay = 0;
+    private final int _imageNum = 0;
+    private int _countDelay = 0;
+    private int hurtTime = 0;
     private int HP = 500;
 
     Direction direction = Direction.RIGHT;
 
-    private int[] animation1 = {
+    private final int[] animation1 = {
             1, 1, 1, 1, 1,
             2, 2, 2, 2, 2,
             3, 3, 3, 3, 3,
@@ -31,7 +33,7 @@ public class Player extends Entity {
             9, 9, 9, 9, 9,
     };
 
-    private int[] animationAttacking = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11};
+    private final int[] animationAttacking = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11};
 
     public Player(GamePanel gamePanel, KeyInput keyInput) {
         super(gamePanel, keyInput);
@@ -148,11 +150,7 @@ public class Player extends Entity {
         } else
             isMove = false;
 
-        if (keyInput.isSpace()) {
-            isAttack = true;
-        } else {
-            isAttack = false;
-        }
+        isAttack = keyInput.isSpace();
 
         if (isAttack) {
             for (int i = 0; i < 5; i++) {
@@ -184,46 +182,46 @@ public class Player extends Entity {
                 // Player was died
                 if (isDied) {
                     // _dyingImage
-                    if (_countDelay >= _dyingImage.length) _countDelay = 0;
-                    g2d.drawImage(_dyingImage[(int) (_countDelay++ / 2)], _x, _y, _width, _height, this);
+                    if (_countDelay / 2 >= _dyingImage.length) _countDelay = _dyingImage.length * 2 - 2;
+                    g2d.drawImage(_dyingImage[_countDelay++ / 2], _x, _y, _width, _height, this);
 
                     return;
                 }
 
                 if (isAttack) {
-                    if (_countDelay >= animationAttacking.length)
+                    if (_countDelay / 2 >= _attackingImage.length)
                         _countDelay = 0;
-                    g2d.drawImage(_attackingImage[animationAttacking[_countDelay++]], _x, _y, _width, _height, this);
+                    g2d.drawImage(_attackingImage[_countDelay++ / 2], _x, _y, _width, _height, this);
                 } else {
                     if (isMove) {
-                        if (_countDelay >= _walkingImages.length) _countDelay = _dyingImage.length - 1;
-                        g2d.drawImage(_walkingImages[_countDelay++], _x, _y, _width, _height, this);
+                        if (_countDelay / 2 >= _walkingImages.length) _countDelay = _dyingImage.length - 1;
+                        g2d.drawImage(_walkingImages[_countDelay++ / 2], _x, _y, _width, _height, this);
                     } else {
                         if (_countDelay >= _standingImage.length) _countDelay = 0;
-                        g2d.drawImage(_standingImage[_countDelay++], _x, _y, _width, _height, this);
+                        g2d.drawImage(_standingImage[_countDelay++ / 2], _x, _y, _width, _height, this);
                     }
                 }
             } else if (direction == Direction.LEFT) {
                 // Player was died
                 if (isDied) {
                     // _dyingImage
-                    if (_countDelay >= _dyingImage.length) _countDelay = _dyingImage.length - 1;
-                    g2d.drawImage(_dyingImage[_countDelay++], _x + _width, _y, -_width, _height, this);
+                    if (_countDelay / 2 >= _dyingImage.length) _countDelay = _dyingImage.length * 2 - 2;
+                    g2d.drawImage(_dyingImage[_countDelay++ / 2], _x + _width, _y, -_width, _height, this);
 
                     return;
                 }
 
                 if (isAttack) {
-                    if (_countDelay >= animationAttacking.length)
+                    if (_countDelay / 2 >= _attackingImage.length)
                         _countDelay = 0;
-                    g2d.drawImage(_attackingImage[animationAttacking[_countDelay++]], _x + _width, _y, -_width, _height, this);
+                    g2d.drawImage(_attackingImage[_countDelay++ / 2], _x + _width, _y, -_width, _height, this);
                 } else {
                     if (isMove) {
-                        if (_countDelay >= _walkingImages.length) _countDelay = 0;
-                        g2d.drawImage(_walkingImages[_countDelay++], _x + _width, _y, -_width, _height, this);
+                        if (_countDelay / 2 >= _walkingImages.length) _countDelay = 0;
+                        g2d.drawImage(_walkingImages[_countDelay++ / 2], _x + _width, _y, -_width, _height, this);
                     } else {
-                        if (_countDelay >= _standingImage.length) _countDelay = 0;
-                        g2d.drawImage(_standingImage[_countDelay++], _x + _width, _y, -_width, _height, this);
+                        if (_countDelay / 2 >= _standingImage.length) _countDelay = 0;
+                        g2d.drawImage(_standingImage[_countDelay++ / 2], _x + _width, _y, -_width, _height, this);
                     }
                 }
             }
@@ -231,6 +229,14 @@ public class Player extends Entity {
         } else {
             g2d.setColor(Color.BLACK);
             g2d.fillRect(_x, _y, _width, _height);
+        }
+
+        if (hurtTime > 0) {
+            Color color1 = new Color(255, 0, 0, 150);
+            Color color2 = new Color(200, 50, 100, 150);
+            g2d.setColor(hurtTime % 10 < 5 ? color1 : color2);
+            g2d.fillRect(_x + 40, _y + 10, _width - 80, _height - 10);
+            hurtTime--;
         }
 
         g2d.setColor(Color.RED);
@@ -244,11 +250,12 @@ public class Player extends Entity {
 
     public void hurt(int d) {
         HP -= d;
+        hurtTime = 50;
+
         if (HP < 0) {
             HP = 0;
             _countDelay = 0;
         }
-
     }
 
     public boolean canMove(int x, int y) {

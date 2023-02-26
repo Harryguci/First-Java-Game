@@ -17,12 +17,12 @@ import java.util.Scanner;
 
 public class GamePanel extends JPanel implements Runnable {
 
-    final byte FPS = 60;
-    final int originalTitleSize = 16;
-    final int scale = 3;
+    private final byte FPS = 60;
+    private final int originalTitleSize = 16;
+    private final int scale = 3;
     public final int titleSize = scale * originalTitleSize;
-    final int maxScreenCol = 20;
-    final int maxScreenRow = 12;
+    private final int maxScreenCol = 20;
+    private final int maxScreenRow = 12;
     public final int screenWidth = titleSize * maxScreenCol;
     public final int screenHeight = titleSize * maxScreenRow;
 
@@ -36,33 +36,18 @@ public class GamePanel extends JPanel implements Runnable {
     public int numBackground = 0;
     public String[] pathBackground =
             {"Background/game_background_1.png", "Background/game_background_2.png", "Background/game_background_3.png", "Background/game_background_4.png"};
-    int bg1LocationX;
-
-    Thread gameThread;
+    private Thread gameThread;
     private final KeyInput keyInput;
     public MouseInput mouseInput;
-
-
     public Player player;
     public Zombie[] zombies = new Zombie[100];
     public Zombie zombieBoss;
     private int countZombie;
-
     public String[] mapName = {"map3.txt"};
-
     public int numMap = 0;
-
     private int scores = 0;
-
     private final GButton[] _buttons;
-
-    private int delayTransition = 500;
-
-
-    public void startGameThread() {
-        gameThread = new Thread(this);
-        gameThread.start();
-    }
+    private int delayTransition = 500; // about 5 seconds
 
     public GamePanel() {
         // [ Default Game Project Setting ]
@@ -107,6 +92,11 @@ public class GamePanel extends JPanel implements Runnable {
         setFocusable(true);
     }
 
+    public void startGameThread() {
+        gameThread = new Thread(this);
+        gameThread.start();
+    }
+
     public void initButtons() {
 
         _buttons[ButtonConstant.PLAY.ordinal()] = new GButton("PLAY", this);
@@ -133,17 +123,18 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void getBackgroundImg() {
         try {
-            bg1LocationX = 0;
             _backgroundImg[0] = ImageIO.read(new File(System.getProperty("user.dir") + "/src/resources/" + pathBackground[0]));
             _backgroundImg[1] = ImageIO.read(new File(System.getProperty("user.dir") + "/src/resources/" + pathBackground[1]));
             _backgroundImg[2] = ImageIO.read(new File(System.getProperty("user.dir") + "/src/resources/" + pathBackground[2]));
             _backgroundImg[3] = ImageIO.read(new File(System.getProperty("user.dir") + "/src/resources/" + pathBackground[3]));
         } catch (IOException e) {
-            System.out.println("Can not read bg");
+            System.out.println("Could not read background image files");
         }
     }
 
     public static void main(String[] args) {
+
+        // Test Read map file.
         GamePanel game = new GamePanel();
         game.setMap("map3.txt");
         for (int i = 0; i < game.maxScreenRow; i++) {
@@ -155,6 +146,7 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    // Increase your score when killed a zomibes
     public void incScore() {
         scores++;
 
@@ -175,6 +167,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     @Override
     public void run() {
+        // Run game
         double drawInterval = (1e9) / FPS;
         double delta = 0;
         long lastTime = System.nanoTime();
@@ -197,7 +190,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void resetZombies() {
-
+        // Create more zombies
         if (countZombie <= 0)
             return;
 
@@ -226,8 +219,8 @@ public class GamePanel extends JPanel implements Runnable {
             player.update();
 
             if (player.isDied()) {
-                delayTransition -= 10;
-//                System.out.println(delayTransition);
+                delayTransition -= 5;
+
                 if (delayTransition <= 0) {
                     delayTransition = 500;
                     statusGame = StatusGame.OVER;
@@ -297,11 +290,11 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void paintGrid(Graphics2D g2d) {
-        Color color2 = new Color(0, 0, 0, 50);
+        Color color = new Color(0, 0, 0, 50);
 
         for (int y = 0; y < maxScreenRow * titleSize; y += titleSize) {
             for (int x = 0; x < maxScreenCol * titleSize; x += titleSize) {
-                g2d.setColor(color2);
+                g2d.setColor(color);
                 g2d.drawRect(x, y, titleSize, titleSize);
             }
         }
