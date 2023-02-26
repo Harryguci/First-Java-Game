@@ -4,8 +4,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class KeyInput implements KeyListener {
-    boolean[] key;
-    boolean isPressed = false;
+    public boolean[] key;
+    private boolean isPressed = false;
 
     public KeyInput() {
         super();

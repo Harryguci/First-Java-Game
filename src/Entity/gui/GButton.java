@@ -1,7 +1,6 @@
 package Entity.gui;
 
 import Game.GamePanel;
-import Game.MouseInput;
 import util.ImageReader;
 
 import javax.swing.*;
@@ -9,9 +8,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.IOException;
-import javax.swing.JFrame;
 
 public class GButton extends JPanel implements MouseListener {
 
@@ -35,8 +32,8 @@ public class GButton extends JPanel implements MouseListener {
 
         _x = _y = 0;
 
-    _strX = 70;
-    _strY = 40;
+        _strX = 70;
+        _strY = 40;
 
         _font = new Font("Roboto", Font.BOLD, 30);
 
@@ -142,6 +139,14 @@ public class GButton extends JPanel implements MouseListener {
         this._font = font;
         this._strX = x;
         this._strY = y;
+    }
+
+    public int getX() {
+        return _x;
+    }
+
+    public int getY() {
+        return _y;
     }
 
     public int getWidth() {

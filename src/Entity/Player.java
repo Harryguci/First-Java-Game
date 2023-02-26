@@ -14,32 +14,18 @@ public class Player extends Entity {
     private final BufferedImage[] _attackingImage = new BufferedImage[12];
     private final BufferedImage[] _dyingImage = new BufferedImage[15];
     private boolean isMove = false, isAttack = false, isDied = false;
-    private final int _imageNum = 0;
     private int _countDelay = 0;
     private int hurtTime = 0;
     private int HP = 500;
 
     Direction direction = Direction.RIGHT;
 
-    private final int[] animation1 = {
-            1, 1, 1, 1, 1,
-            2, 2, 2, 2, 2,
-            3, 3, 3, 3, 3,
-            4, 4, 4, 4, 4,
-            5, 5, 5, 5, 5,
-            6, 6, 6, 6, 6,
-            7, 7, 7, 7, 7,
-            8, 8, 8, 8, 8,
-            9, 9, 9, 9, 9,
-    };
-
-    private final int[] animationAttacking = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11};
-
     public Player(GamePanel gamePanel, KeyInput keyInput) {
         super(gamePanel, keyInput);
         setImage();
 
-        // System.out.println(_width + " " + _height);
+        setCollision(true);
+        // setCollisionArea(new Rectangle());
         setSize(new Dimension((int) (100 * 1.47), 100));
     }
 

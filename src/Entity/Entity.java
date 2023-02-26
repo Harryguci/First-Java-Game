@@ -5,11 +5,17 @@ import Game.KeyInput;
 
 import javax.swing.JPanel;
 import java.awt.*;
+import java.awt.Rectangle;
 
 public abstract class Entity extends JPanel {
     protected GamePanel gamePanel;
     protected KeyInput keyInput;
+
+    protected Rectangle collisionArea;
+
     protected int _x, _y, _speed, _width, _height;
+
+    protected boolean isCollision = false;
 
     public Entity(GamePanel gamePanel, KeyInput keyInput) {
         this.gamePanel = gamePanel;
@@ -20,7 +26,7 @@ public abstract class Entity extends JPanel {
         _speed = 5;
     }
 
-    // getter
+    // [GETTER]
     public int getX() {
         return _x;
     }
@@ -49,7 +55,11 @@ public abstract class Entity extends JPanel {
         return _height;
     }
 
-    // setter
+    public Rectangle getCollisionArea() {
+        return this.collisionArea;
+    }
+
+    // [SETTER]
     public void setSize(Dimension s) {
         _width = s.width;
         _height = s.height;
@@ -61,6 +71,10 @@ public abstract class Entity extends JPanel {
         _speed = speed;
     }
 
+    public void setCollisionArea(Rectangle rect) {
+        this.collisionArea = rect;
+    }
+
     public void setLocation(int x, int y) {
         _x = x;
         _y = y;
@@ -68,6 +82,22 @@ public abstract class Entity extends JPanel {
 
     public void setSpeed(int speed) {
         _speed = speed;
+    }
+
+    public void setCollision(boolean value) {
+        this.isCollision = value;
+    }
+
+    public boolean isCollide(Entity entity) {
+        Rectangle rect1 = this.collisionArea;
+        Rectangle rect2 = entity.collisionArea;
+
+        return (
+                rect1.x < rect2.x + rect2.width &&
+                        rect1.x + rect1.width > rect2.x &&
+                        rect1.y < rect2.y + rect2.height &&
+                        rect1.height + rect1.y > rect2.y
+        );
     }
 
     abstract public void update();

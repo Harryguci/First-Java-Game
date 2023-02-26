@@ -33,7 +33,7 @@ public class Zombie extends Entity {
 
     public Zombie(Zombie t) {
         super(t.gamePanel, t.keyInput);
-
+        setCollision(true);
         this.setImage(t);
 
         setSize(_size[typeZombie]);
@@ -46,6 +46,7 @@ public class Zombie extends Entity {
 
         super(gamePanel, keyInput);
         setImage();
+        setCollision(true);
         this.typeZombie = 0;
 
         setSize(_size[typeZombie]);
@@ -61,7 +62,7 @@ public class Zombie extends Entity {
 
         super(gamePanel, keyInput);
         this.typeZombie = typeZombie;
-
+        setCollision(true);
         setImage();
         setSize(_size[typeZombie]);
 
@@ -229,6 +230,12 @@ public class Zombie extends Entity {
         this._dyingImage = t._dyingImage;
     }
 
+    public void create() {
+        int d = (new RandomLocation(0, 100).rand()) % 2 == 0 ? -100 : gamePanel.screenWidth + 50;
+        setLocation(d, new RandomLocation(0, gamePanel.screenHeight).rand());
+        HP = 30;
+    }
+
     // UPDATING & DRAWING
     @Override
     public void update() {
@@ -282,10 +289,6 @@ public class Zombie extends Entity {
         if (isDied) {
             if (_animatedCounter >= _dyingImage.length) {
                 isDied = false;
-                int d = (new RandomLocation(0, 100).rand()) % 2 == 0 ? -100 : gamePanel.screenWidth + 50;
-
-                setLocation(d, new RandomLocation(0, gamePanel.screenHeight).rand());
-                HP = 30;
                 return;
             }
 
@@ -336,7 +339,6 @@ public class Zombie extends Entity {
 
             _animatedCounter = 0;
             isDied = true;
-
             gamePanel.incScore();
         }
 
