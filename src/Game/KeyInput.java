@@ -4,12 +4,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class KeyInput implements KeyListener {
+    private final int MAX_SIZE = 120;
     public boolean[] key;
     private boolean isPressed = false;
 
     public KeyInput() {
         super();
-        key = new boolean[120];
+        key = new boolean[MAX_SIZE];
         key[KeyEvent.VK_UP] = key[KeyEvent.VK_DOWN] = key[KeyEvent.VK_LEFT] = key[KeyEvent.VK_RIGHT] = key[KeyEvent.VK_SPACE] = key[KeyEvent.VK_ESCAPE] = false;
     }
 
@@ -49,12 +50,14 @@ public class KeyInput implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         isPressed = true;
+        if (e.getKeyCode() > MAX_SIZE) return;
         key[e.getKeyCode()] = true;
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         isPressed = false;
+        if (e.getKeyCode() > MAX_SIZE) return;
         key[e.getKeyCode()] = false;
     }
 }
