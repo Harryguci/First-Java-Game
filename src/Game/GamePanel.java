@@ -25,9 +25,10 @@ public class GamePanel extends JPanel implements Runnable {
     private final int maxScreenRow = 12;
     public final int screenWidth = titleSize * maxScreenCol;
     public final int screenHeight = titleSize * maxScreenRow;
+    private String _language = "ENG";
 
     private enum StatusGame {
-        START, PLAYING, PAUSE, OVER, TRANSITION, GAME_TUTORIAL,
+        START, PLAYING, PAUSE, OVER, TRANSITION, GAME_TUTORIAL, WIN_GAME,
     }
 
     private StatusGame statusGame = StatusGame.START;
@@ -46,6 +47,7 @@ public class GamePanel extends JPanel implements Runnable {
     public String[] mapName = {"map3.txt"};
     public int numMap = 0;
     private int scores = 0;
+    private int[] scoreLevel = {10, 25, 35, 36};
     private final GButton[] _buttons;
     private int delayTransition = 500; // about 5 seconds
 
@@ -119,6 +121,16 @@ public class GamePanel extends JPanel implements Runnable {
         _buttons[ButtonConstant.GAME_PLAY_TUTORIAL.ordinal()].setLocation(
                 _buttons[ButtonConstant.GAME_PLAY_TUTORIAL.ordinal()].getX(),
                 _buttons[ButtonConstant.GAME_PLAY_TUTORIAL.ordinal()].getY() + 100);
+
+        _buttons[ButtonConstant.BACK_START.ordinal()] = new GButton("Back", this);
+        _buttons[ButtonConstant.BACK_START.ordinal()].setLocation(10, 10);
+        _buttons[ButtonConstant.BACK_START.ordinal()].setSize(80, 50);
+        _buttons[ButtonConstant.BACK_START.ordinal()].setFont(new Font("Arial", Font.BOLD, 15), 20, 30);
+
+        _buttons[ButtonConstant.CHANGE_LANGUAGE.ordinal()] = new GButton("Lang: " + _language, this);
+        _buttons[ButtonConstant.CHANGE_LANGUAGE.ordinal()].setLocation(screenWidth - 130, 10);
+        _buttons[ButtonConstant.CHANGE_LANGUAGE.ordinal()].setSize(100, 40);
+        _buttons[ButtonConstant.CHANGE_LANGUAGE.ordinal()].setFont(new Font("Arial", Font.PLAIN, 15), 15, 25);
     }
 
     public void restartGame() {
@@ -159,16 +171,18 @@ public class GamePanel extends JPanel implements Runnable {
         boolean check = true;
 
         for (Zombie x : zombies) {
-            if (x.isDied()) {
+            if (x == null) break;
+
+            if (x.isDied() && countZombie > 0) {
                 --countZombie;
                 x.create();
                 check = false;
-                if (countZombie <= 0)
-                    break;
+            } else if (!x.isDied()) {
+                check = false;
             }
         }
 
-        if (check) {
+        if (scores == scoreLevel[numBackground]) {
             numBackground++;
             scores++;
 
@@ -176,8 +190,12 @@ public class GamePanel extends JPanel implements Runnable {
 
             statusGame = StatusGame.TRANSITION;
 
-            if (numBackground >= 4)
+            if (numBackground >= 4) {
                 numBackground = 0;
+
+                statusGame = StatusGame.WIN_GAME;
+                return;
+            }
             resetZombies();
         }
     }
@@ -283,6 +301,24 @@ public class GamePanel extends JPanel implements Runnable {
             }
         } else if (statusGame == StatusGame.GAME_TUTORIAL) {
             statusGame = keyInput.isESC() ? StatusGame.START : StatusGame.GAME_TUTORIAL;
+            _buttons[ButtonConstant.BACK_START.ordinal()].update();
+            _buttons[ButtonConstant.CHANGE_LANGUAGE.ordinal()].update();
+
+            if (_buttons[ButtonConstant.BACK_START.ordinal()].isPressed()) {
+                statusGame = StatusGame.START;
+                _buttons[ButtonConstant.BACK_START.ordinal()].setPressed(false);
+            }
+
+            if (_buttons[ButtonConstant.CHANGE_LANGUAGE.ordinal()].isPressed()) {
+                _language = _language == "ENG" ? "VI" : "ENG";
+                _buttons[ButtonConstant.CHANGE_LANGUAGE.ordinal()].setPressed(false);
+                _buttons[ButtonConstant.CHANGE_LANGUAGE.ordinal()].setContent("Lang: " + _language);
+            }
+        } else if (statusGame == StatusGame.WIN_GAME) {
+            _buttons[ButtonConstant.BACK_START.ordinal()].update();
+
+            if (_buttons[ButtonConstant.BACK_START.ordinal()].isPressed())
+                statusGame = StatusGame.START;
         }
     }
 
@@ -304,6 +340,8 @@ public class GamePanel extends JPanel implements Runnable {
             paintGameOver(g2d);
         } else if (statusGame == StatusGame.GAME_TUTORIAL) {
             paintTutorial(g2d);
+        } else if (statusGame == StatusGame.WIN_GAME) {
+            paintWin(g2d);
         }
 
         g2d.dispose();
@@ -340,6 +378,7 @@ public class GamePanel extends JPanel implements Runnable {
         // Scores
         g2d.setColor(new Color(0, 0, 0, 150));
         g2d.fillRoundRect(screenWidth - 280, 10, 250, 50, 30, 30);
+        g2d.fillRoundRect(140, 10, 200, 50, 30, 30);
 
         g2d.setFont(new Font("Arial", Font.PLAIN, 20));
         g2d.setColor(Color.WHITE);
@@ -350,8 +389,11 @@ public class GamePanel extends JPanel implements Runnable {
         str = player.getHP() + " HP";
         g2d.drawString(str, screenWidth - 250, 40);
 
+        g2d.drawString("Target: " + scoreLevel[numBackground] + " Zombies", 150, 40);
+
         // PAUSE button
         _buttons[ButtonConstant.PAUSE.ordinal()].draw(g2d);
+
     }
 
     public void paintStartScreen(Graphics2D g2d) {
@@ -367,11 +409,14 @@ public class GamePanel extends JPanel implements Runnable {
 
         g2d.setFont(fHeading);
         g2d.setColor(new Color(255, 100, 100, 200));
-        g2d.drawString("Welcome to Harryguci Game", (screenWidth - 500) / 2 - 3, 203);
+
+        int headingX = (screenWidth - 480) / 2;
+
+        g2d.drawString("Welcome to Harryguci Game", headingX - 3, 203);
         g2d.setColor(new Color(100, 100, 255, 200));
-        g2d.drawString("Welcome to Harryguci Game", (screenWidth - 500) / 2 + 3, 197);
+        g2d.drawString("Welcome to Harryguci Game", headingX + 3, 197);
         g2d.setColor(Color.WHITE);
-        g2d.drawString("Welcome to Harryguci Game", (screenWidth - 500) / 2, 200);
+        g2d.drawString("Welcome to Harryguci Game", headingX, 200);
 
         _buttons[ButtonConstant.PLAY.ordinal()].setContent("PLAY");
         _buttons[ButtonConstant.PLAY.ordinal()].setStringLocation(60, 40);
@@ -387,6 +432,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void paintTutorial(Graphics2D g2d) {
+
         g2d.drawImage(_backgroundImg[0], 0, 0, screenWidth, screenHeight, this);
         g2d.setColor(new Color(0, 0, 0, 150));
         g2d.fillRect(0, 0, screenWidth, screenHeight);
@@ -395,18 +441,43 @@ public class GamePanel extends JPanel implements Runnable {
         final Font fHeading = new Font("Arial", Font.BOLD, 40);
 
         final String heading = "Game Tutorial";
+        final String headingVN = "Hướng dẫn";
+
+
+        String lang = _language;
+
         final String content =
                 "- Use [UP] [DOWN] [LEFT] [RIGHT] on keyboard to control the main character.\n" +
                         "- Use [SPACE] on keyboard to attack zombies.\n" +
                         "- You will be died when your HP is over.\n" +
-                        "- Try kill all zombies to Continue next level";
+                        "- Try kill all zombies to Continue next level\n\n" +
+                        "Press [ESC] to back the menu";
+
+        final String contentVN =
+                "- Sử dụng phím [UP] [DOWN] [LEFT] [RIGHT] trên bàn phím để điều khiển nhân vật chính.\n" +
+                        "- Sử dụng [SPACE] trên bàn phím để tấn công zombie.\n" +
+                        "- Bạn sẽ chết khi bạn hết HP.\n" +
+                        "- Cố gắng tiêu diệt tât cả zombie để tiếp tục level tiếp theo\n\n" +
+                        "Nhấn [ESC] để quay lại màn hình bắt đầu";
 
         g2d.setColor(Color.WHITE);
         g2d.setFont(fHeading);
-        g2d.drawString(heading, (screenWidth - 350) / 2, 100);
+
+        if (lang.equals("ENG")) {
+            g2d.drawString(heading, (screenWidth - 350) / 2, 100);
+        } else
+            g2d.drawString(headingVN, (screenWidth - 350) / 2, 100);
 
         g2d.setFont(fParagraph);
-        drawString(g2d, content, 100, 200);
+
+        if (lang.equals("ENG"))
+            drawString(g2d, content, 100, 200);
+        else
+            drawString(g2d, contentVN, 100, 200);
+
+        _buttons[ButtonConstant.BACK_START.ordinal()].draw(g2d);
+        _buttons[ButtonConstant.CHANGE_LANGUAGE.ordinal()].draw(g2d);
+
     }
 
     public void paintPlayScreen(Graphics2D g2d) {
@@ -442,6 +513,9 @@ public class GamePanel extends JPanel implements Runnable {
         g2d.setColor(new Color(0, 0, 0, 100));
         g2d.fillRect(0, 0, screenWidth, screenHeight);
 
+        g2d.setFont(new Font("Arial", Font.BOLD, 40));
+        g2d.setColor(Color.WHITE);
+        g2d.drawString("NEXT LEVEL..", (screenWidth - 230) / 2, screenHeight / 2 - 50);
         g2d.setFont(new Font("Arial", Font.BOLD, 30));
         g2d.setColor(Color.RED);
         g2d.drawString("Continue after " + (delayTransition / 50) + "s", (screenWidth - 200) / 2, (screenHeight - 30) / 2);
@@ -458,6 +532,23 @@ public class GamePanel extends JPanel implements Runnable {
         _buttons[ButtonConstant.PLAY.ordinal()].setContent("AGAIN");
         _buttons[ButtonConstant.PLAY.ordinal()].setStringLocation(55, 40);
         _buttons[ButtonConstant.PLAY.ordinal()].draw(g2d);
+    }
+
+    public void paintWin(Graphics2D g2d) {
+        g2d.setColor(Color.WHITE);
+        String heading = "You are the winner.";
+        g2d.setFont(new Font("Arial", Font.BOLD, 35));
+        g2d.drawString(heading, screenWidth / 2 - 150, screenHeight / 2 - 50);
+
+        _buttons[ButtonConstant.BACK_START.ordinal()].setContent("Play Again");
+        _buttons[ButtonConstant.BACK_START.ordinal()].setSize(120, 50);
+        _buttons[ButtonConstant.BACK_START.ordinal()].setFont(new Font("Arial", Font.BOLD, 40));
+
+        int w = _buttons[ButtonConstant.BACK_START.ordinal()].getWidth();
+        int h = _buttons[ButtonConstant.BACK_START.ordinal()].getHeight();
+        _buttons[ButtonConstant.BACK_START.ordinal()].setLocation((screenWidth - w) / 2, (screenHeight - h) / 2);
+
+        _buttons[ButtonConstant.BACK_START.ordinal()].draw(g2d);
     }
 
     public boolean setMap(String mapName) {

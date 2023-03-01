@@ -16,7 +16,7 @@ public class Player extends Entity {
     private boolean isMove = false, isAttack = false, isDied = false;
     private int _countDelay = 0;
     private int hurtTime = 0;
-    private int HP = 500;
+    private int HP = 300;
 
     Direction direction = Direction.RIGHT;
 
@@ -180,10 +180,10 @@ public class Player extends Entity {
                     g2d.drawImage(_attackingImage[_countDelay++ / 2], _x, _y, _width, _height, this);
                 } else {
                     if (isMove) {
-                        if (_countDelay / 2 >= _walkingImages.length) _countDelay = _dyingImage.length - 1;
+                        if (_countDelay / 2 >= _walkingImages.length) _countDelay = 0;
                         g2d.drawImage(_walkingImages[_countDelay++ / 2], _x, _y, _width, _height, this);
                     } else {
-                        if (_countDelay >= _standingImage.length) _countDelay = 0;
+                        if (_countDelay / 2 >= _standingImage.length) _countDelay = 0;
                         g2d.drawImage(_standingImage[_countDelay++ / 2], _x, _y, _width, _height, this);
                     }
                 }
@@ -228,9 +228,14 @@ public class Player extends Entity {
         g2d.setColor(Color.RED);
 
         // Draw HP bar
-        for (int i = 0; i <= 10; i++) {
-            if (HP >= i * 10)
-                g2d.fillRect(_x + _width / 10 * i, _y, _width / 10 - 5, 5);
+        // 300 / 50 = 6
+        int m = 6;
+
+        for (int i = 0; i <= 6; i++) {
+            if (HP >= i * 50)
+                g2d.fillRect(_x + _width / 6 * i, _y, _width / 6 - 5, 5);
+            else
+                g2d.drawRect(_x + _width / 6 * i, _y, _width / 6 - 5, 5);
         }
     }
 

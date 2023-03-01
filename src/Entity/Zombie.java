@@ -231,9 +231,10 @@ public class Zombie extends Entity {
     }
 
     public void create() {
-        int d = (new RandomLocation(0, 100).rand()) % 2 == 0 ? -100 : gamePanel.screenWidth + 50;
+        int d = (new RandomLocation(0, 100).rand()) % 2 == 0 ? -200 : gamePanel.screenWidth + 150;
         setLocation(d, new RandomLocation(0, gamePanel.screenHeight).rand());
         HP = 30;
+        isDied = false;
     }
 
     // UPDATING & DRAWING
